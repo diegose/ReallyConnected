@@ -9,13 +9,11 @@ namespace ReallyConnected
     {
         static NotifyIcon NotifyIcon;
         static string Host = "google.com";
-        static int Interval = 30000;
+        static int Interval = 10 * 1000;
 
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
             NotifyIcon = new NotifyIcon
                          {
                              Visible = true,
@@ -36,18 +34,35 @@ namespace ReallyConnected
 
         static void TestConnectivity()
         {
-            var status = new Ping().Send(Host).Status;
-            switch (status)
+            try
             {
-                case IPStatus.Success:
-                    NotifyIcon.Icon = Properties.Resources.Connected;
-                    NotifyIcon.Text = "Connected";
-                    break;
-                default:
-                    NotifyIcon.Icon = Properties.Resources.Connected;
-                    NotifyIcon.Text = status.ToString();
-                    break;
+                var status = new Ping().Send(Host).Status;
+                switch (status)
+                {
+                    case IPStatus.Success:
+                        Connected();
+                        break;
+                    default:
+                        Disconnected(status.ToString());
+                        break;
+                }
             }
+            catch (PingException e)
+            {
+                Disconnected(e.Message);
+            }
+        }
+
+        private static void Disconnected(string reason)
+        {
+            NotifyIcon.Icon = Properties.Resources.Disconnected;
+            NotifyIcon.Text = reason;
+        }
+
+        private static void Connected()
+        {
+            NotifyIcon.Icon = Properties.Resources.Connected;
+            NotifyIcon.Text = "Connected";
         }
     }
 }
